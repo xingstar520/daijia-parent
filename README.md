@@ -28,3 +28,4 @@
 - Natapp：内网穿透
 - Docker：容器化技术;  生产环境Redis（运维人员）；快速搭建环境Docker run
 
+![image](publicPhoto/image-20240620203904041.png)
