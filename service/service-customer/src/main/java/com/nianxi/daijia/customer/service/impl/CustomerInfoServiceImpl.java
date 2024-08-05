@@ -9,10 +9,13 @@ import com.nianxi.daijia.customer.service.CustomerInfoService;
 import com.nianxi.daijia.model.entity.customer.CustomerInfo;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nianxi.daijia.model.entity.customer.CustomerLoginLog;
+import com.nianxi.daijia.model.vo.customer.CustomerLoginVo;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -58,5 +61,20 @@ public class CustomerInfoServiceImpl extends ServiceImpl<CustomerInfoMapper, Cus
         customerLoginLogMapper.insert(customerLoginLog);
         //5.返回用户id
         return customerInfo.getId();
+    }
+
+    //获取客户登录信息
+    @Override
+    public CustomerLoginVo getCustomerLoginInfo(Long customerId) {
+        //1.根据用户id查询用户信息
+        CustomerInfo customerInfo = customerInfoMapper.selectById(customerId);
+        //2 封装到CustomerLoginVo对象中
+        CustomerLoginVo customerLoginVo = new CustomerLoginVo();
+        BeanUtils.copyProperties(customerInfo, customerLoginVo);
+        String phone = customerInfo.getPhone();
+        boolean isBindPhone = StringUtils.hasText(phone);
+        customerLoginVo.setIsBindPhone(isBindPhone);
+        //3 CustomerLoginVo返回
+        return customerLoginVo;
     }
 }
