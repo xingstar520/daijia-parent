@@ -3,14 +3,12 @@ package com.nianxi.daijia.customer.controller;
 import com.nianxi.daijia.common.result.Result;
 import com.nianxi.daijia.customer.service.CustomerInfoService;
 import com.nianxi.daijia.model.entity.customer.CustomerInfo;
+import com.nianxi.daijia.model.form.customer.UpdateWxPhoneForm;
 import com.nianxi.daijia.model.vo.customer.CustomerLoginVo;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -41,6 +39,13 @@ public class CustomerInfoController {
 	public Result<CustomerLoginVo> getCustomerLoginInfo(@PathVariable Long customerId) {
 		CustomerLoginVo customerLoginVo = customerInfoService.getCustomerLoginInfo(customerId);
 		return Result.ok(customerLoginVo);
+	}
+
+	//更新客户微信手机号码
+	@Operation(summary = "更新客户微信手机号码")
+	@GetMapping("/updateWxPhoneNumber")
+	public Result<Boolean> updateWxPhoneNumber(@RequestBody UpdateWxPhoneForm updateWxPhoneForm) {
+		return Result.ok(customerInfoService.updateWxPhoneNumber(updateWxPhoneForm));
 	}
 }
 

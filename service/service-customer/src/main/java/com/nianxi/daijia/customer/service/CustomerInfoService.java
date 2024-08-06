@@ -2,6 +2,7 @@ package com.nianxi.daijia.customer.service;
 
 import com.nianxi.daijia.model.entity.customer.CustomerInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.nianxi.daijia.model.form.customer.UpdateWxPhoneForm;
 import com.nianxi.daijia.model.vo.customer.CustomerLoginVo;
 
 public interface CustomerInfoService extends IService<CustomerInfo> {
@@ -11,4 +12,7 @@ public interface CustomerInfoService extends IService<CustomerInfo> {
 
     //获取客户登录信息
     CustomerLoginVo getCustomerLoginInfo(Long customerId);
+
+    //更新客户微信手机号码
+    Boolean updateWxPhoneNumber(UpdateWxPhoneForm updateWxPhoneForm);
 }

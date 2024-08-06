@@ -2,13 +2,17 @@ package com.nianxi.daijia.customer.service.impl;
 
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
+import cn.binarywang.wx.miniapp.bean.WxMaPhoneNumberInfo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nianxi.daijia.common.execption.GuiguException;
+import com.nianxi.daijia.common.result.ResultCodeEnum;
 import com.nianxi.daijia.customer.mapper.CustomerInfoMapper;
 import com.nianxi.daijia.customer.mapper.CustomerLoginLogMapper;
 import com.nianxi.daijia.customer.service.CustomerInfoService;
 import com.nianxi.daijia.model.entity.customer.CustomerInfo;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nianxi.daijia.model.entity.customer.CustomerLoginLog;
+import com.nianxi.daijia.model.form.customer.UpdateWxPhoneForm;
 import com.nianxi.daijia.model.vo.customer.CustomerLoginVo;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -76,5 +80,24 @@ public class CustomerInfoServiceImpl extends ServiceImpl<CustomerInfoMapper, Cus
         customerLoginVo.setIsBindPhone(isBindPhone);
         //3 CustomerLoginVo返回
         return customerLoginVo;
+    }
+
+    //更新客户微信手机号码
+    @Override
+    public Boolean updateWxPhoneNumber(UpdateWxPhoneForm updateWxPhoneForm) {
+        //1.根据code值获取微信绑定手机号码
+        try {
+            WxMaPhoneNumberInfo phoneNoInfo = wxMaService.getUserService().getPhoneNoInfo(updateWxPhoneForm.getCode());
+            String phoneNumber = phoneNoInfo.getPhoneNumber();
+
+            //更新用户信息
+            Long customerId = updateWxPhoneForm.getCustomerId();
+            CustomerInfo customerInfo = customerInfoMapper.selectById(customerId);
+            customerInfo.setPhone(phoneNumber);
+            customerInfoMapper.updateById(customerInfo);
+            return true;
+        } catch (WxErrorException e) {
+            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+        }
     }
 }
