@@ -56,21 +56,39 @@ public class CustomerServiceImpl implements CustomerService {
         return token;
     }
 
-    //获取客户登录信息
-    @Override
-    public CustomerLoginVo getCustomerLoginInfo(String token) {
-        //2 根据token查询redis
-        //3 查询token在redis里面对应用户id
-        String customerId = (String)redisTemplate.opsForValue().get(RedisConstant.USER_LOGIN_KEY_PREFIX + token);
-        if (!StringUtils.hasText(customerId)) {
-            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
-        }
-//        if (StringUtils.isEmpty(customerId)) {
+//    //获取客户登录信息
+//    @Override
+//    public CustomerLoginVo getCustomerLoginInfo(String token) {
+//        //2 根据token查询redis
+//        //3 查询token在redis里面对应用户id
+//        String customerId = (String)redisTemplate.opsForValue().get(RedisConstant.USER_LOGIN_KEY_PREFIX + token);
+//        if (!StringUtils.hasText(customerId)) {
 //            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
 //        }
+////        if (StringUtils.isEmpty(customerId)) {
+////            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+////        }
+//
+//        //4 根据用户id进行远程调用 得到用户信息
+//        Result<CustomerLoginVo> customerLoginVoResult = client.getCustomerLoginInfo(Long.parseLong(customerId));
+//        Integer code = customerLoginVoResult.getCode();
+//        if (code != 200) {
+//            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+//        }
+//
+//        CustomerLoginVo customerLoginVo = customerLoginVoResult.getData();
+//        if (customerLoginVo == null) {
+//            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+//        }
+//        //5 返回用户信息
+//        return customerLoginVo;
+//    }
 
+    //获取客户基本信息(改进)
+    @Override
+    public CustomerLoginVo getCustomerInfo(Long customerId) {
         //4 根据用户id进行远程调用 得到用户信息
-        Result<CustomerLoginVo> customerLoginVoResult = client.getCustomerLoginInfo(Long.parseLong(customerId));
+        Result<CustomerLoginVo> customerLoginVoResult = client.getCustomerLoginInfo(customerId);
         Integer code = customerLoginVoResult.getCode();
         if (code != 200) {
             throw new GuiguException(ResultCodeEnum.DATA_ERROR);

@@ -2,8 +2,10 @@ package com.nianxi.daijia.customer.controller;
 
 import com.nianxi.daijia.common.constant.RedisConstant;
 import com.nianxi.daijia.common.execption.GuiguException;
+import com.nianxi.daijia.common.login.NianxiLogin;
 import com.nianxi.daijia.common.result.Result;
 import com.nianxi.daijia.common.result.ResultCodeEnum;
+import com.nianxi.daijia.common.util.AuthContextHolder;
 import com.nianxi.daijia.customer.client.CustomerInfoFeignClient;
 import com.nianxi.daijia.customer.service.CustomerService;
 import com.nianxi.daijia.model.vo.customer.CustomerLoginVo;
@@ -32,17 +34,24 @@ public class CustomerController {
         return Result.ok(customerService.login(code));
     }
 
-    //获取客户基本信息
+      //获取客户基本信息
+//    @Operation(summary = "获取客户登录信息")
+//    @GetMapping("/getCustomerLoginInfo")
+//    public Result<CustomerLoginVo> getCustomerLoginInfo(@RequestHeader("token") String token) {
+//        //调用service方法
+//        CustomerLoginVo customerLoginVo = customerService.getCustomerLoginInfo(token);
+//        return Result.ok(customerLoginVo);
+//    }
+
+    //获取客户基本信息(改进)
     @Operation(summary = "获取客户登录信息")
+    @NianxiLogin
     @GetMapping("/getCustomerLoginInfo")
-    public Result<CustomerLoginVo> getCustomerLoginInfo(@RequestHeader("token") String token) {
-        //1.从请求头获取token字符串
-        //HttpServletRequest request
-        //String token = request.getHeader("token");
-
-        //调用service方法
-        CustomerLoginVo customerLoginVo = customerService.getCustomerLoginInfo(token);
-
+    public Result<CustomerLoginVo> getCustomerLoginInfo() {
+        //1.从ThreadLocal中获取用户ID
+        Long customerId = AuthContextHolder.getUserId();
+        //2.调用service方法
+        CustomerLoginVo customerLoginVo =  customerService.getCustomerInfo(customerId);
         return Result.ok(customerLoginVo);
     }
 }
