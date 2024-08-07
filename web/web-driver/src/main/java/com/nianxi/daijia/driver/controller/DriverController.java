@@ -1,7 +1,10 @@
 package com.nianxi.daijia.driver.controller;
 
+import com.nianxi.daijia.common.login.NianxiLogin;
 import com.nianxi.daijia.common.result.Result;
+import com.nianxi.daijia.common.util.AuthContextHolder;
 import com.nianxi.daijia.driver.service.DriverService;
+import com.nianxi.daijia.model.vo.driver.DriverLoginVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,18 @@ public class DriverController {
     @GetMapping(value = "/login/{code}")
     public Result<String> wxLogin(@PathVariable String code) {
         return Result.ok(driverService.login(code));
+    }
+
+    //获取司机信息
+    @Operation(summary = "获取司机信息")
+    @NianxiLogin
+    @GetMapping("/getDriverLoginInfo")
+    public Result<DriverLoginVo> getDriverLoginInfo(){
+        //1 获取用户id
+        Long driverId = AuthContextHolder.getUserId();
+        //2.调用service方法
+        DriverLoginVo driverLoginVo = driverService.getDriverLoginInfo(driverId);
+        return Result.ok(driverLoginVo);
     }
 }
 

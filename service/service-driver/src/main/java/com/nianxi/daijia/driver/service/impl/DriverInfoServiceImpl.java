@@ -16,10 +16,13 @@ import com.nianxi.daijia.model.entity.driver.DriverInfo;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nianxi.daijia.model.entity.driver.DriverLoginLog;
 import com.nianxi.daijia.model.entity.driver.DriverSet;
+import com.nianxi.daijia.model.vo.driver.DriverLoginVo;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 
@@ -90,5 +93,21 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
         } catch (WxErrorException e) {
             throw new GuiguException(ResultCodeEnum.DATA_ERROR);
         }
+    }
+
+
+    //获取司机信息
+    @Override
+    public DriverLoginVo getDriverInfo(Long driverId) {
+        //1.根据司机id查询司机信息
+        DriverInfo driverInfo = driverInfoMapper.selectById(driverId);
+        //2.根据司机id查询司机设置信息
+        DriverLoginVo driverLoginVo = new DriverLoginVo();
+        BeanUtils.copyProperties(driverInfo, driverLoginVo);
+        //3.是否建立人脸识别
+        String faceModelId = driverInfo.getFaceModelId();;
+        boolean isArchiveFace = StringUtils.hasText(faceModelId);
+        driverLoginVo.setIsArchiveFace(isArchiveFace);
+        return driverLoginVo;
     }
 }

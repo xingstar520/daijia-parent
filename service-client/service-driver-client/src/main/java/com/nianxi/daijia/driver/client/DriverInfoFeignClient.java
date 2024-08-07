@@ -19,4 +19,8 @@ public interface DriverInfoFeignClient {
     //微信小程序登录接口
     @GetMapping(value = "/driver/info/login/{code}")
     Result<Long> login(@PathVariable("code") String code);
+
+    //获取司机信息
+    @GetMapping(value = "/driver/info/getDriverLoginInfo/{driverId}")
+    Result<DriverLoginVo> getDriverLoginInfo(@PathVariable("driverId") Long driverId);
 }

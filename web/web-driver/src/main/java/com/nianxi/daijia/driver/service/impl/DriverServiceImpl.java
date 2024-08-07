@@ -6,6 +6,7 @@ import com.nianxi.daijia.common.result.Result;
 import com.nianxi.daijia.common.result.ResultCodeEnum;
 import com.nianxi.daijia.driver.client.DriverInfoFeignClient;
 import com.nianxi.daijia.driver.service.DriverService;
+import com.nianxi.daijia.model.vo.driver.DriverLoginVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -50,5 +51,24 @@ public class DriverServiceImpl implements DriverService {
                 RedisConstant.USER_LOGIN_KEY_TIMEOUT,
                 TimeUnit.SECONDS);
         return token;
+    }
+
+    //获取司机信息
+    @Override
+    public DriverLoginVo getDriverLoginInfo(Long driverId) {
+        //2 远程调用获取司机信息
+        Result<DriverLoginVo> loginVoResult = client.getDriverLoginInfo(driverId);
+        //3 判断是否获取成功
+        Integer code = loginVoResult.getCode();
+        if (code != 200) {
+            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+        }
+        //4 获取司机信息
+        DriverLoginVo driverLoginVo = loginVoResult.getData();
+        if (driverLoginVo == null) {
+            throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+        }
+        //5 返回司机信息
+        return driverLoginVo;
     }
 }
