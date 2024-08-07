@@ -16,5 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(value = "service-driver")
 public interface DriverInfoFeignClient {
 
-
+    //微信小程序登录接口
+    @GetMapping(value = "/driver/info/login/{code}")
+    Result<Long> login(@PathVariable("code") String code);
 }
