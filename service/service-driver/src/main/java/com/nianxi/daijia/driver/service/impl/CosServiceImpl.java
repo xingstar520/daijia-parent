@@ -1,5 +1,6 @@
 package com.nianxi.daijia.driver.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.nianxi.daijia.driver.config.TencentCloudProperties;
 import com.nianxi.daijia.driver.service.CosService;
 import com.nianxi.daijia.model.vo.driver.CosUploadVo;
@@ -7,18 +8,20 @@ import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
 import com.qcloud.cos.auth.COSCredentials;
+import com.qcloud.cos.http.HttpMethodName;
 import com.qcloud.cos.http.HttpProtocol;
-import com.qcloud.cos.model.ObjectMetadata;
-import com.qcloud.cos.model.PutObjectRequest;
-import com.qcloud.cos.model.PutObjectResult;
-import com.qcloud.cos.model.StorageClass;
+import com.qcloud.cos.model.*;
 import com.qcloud.cos.region.Region;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.Date;
 import java.util.UUID;
 
 @Slf4j
@@ -71,13 +74,33 @@ public class CosServiceImpl implements CosService {
         }
         putObjectRequest.setStorageClass(StorageClass.Standard);
         PutObjectResult putObjectResult = cosClient.putObject(putObjectRequest); //上传文件
+        log.info(JSON.toJSONString(putObjectResult));
         cosClient.shutdown();
 
         //封装返回对象
         CosUploadVo cosUploadVo = new CosUploadVo();
         cosUploadVo.setUrl(uploadPath);
-        //XJJ TODD 2024/8/8: 图片临时访问url，回显使用
-        cosUploadVo.setShowUrl("");
+        // 图片临时访问url，回显使用
+        cosUploadVo.setShowUrl(this.getImageUrl(uploadPath));
         return cosUploadVo;
+    }
+
+    //获取临时签名URL
+    @Override
+    public String getImageUrl(String path) {
+        if (!StringUtils.hasText(path)) {
+            return "";
+        }
+        //获取私有cos客户端
+        COSClient cosClient = this.getPrivateCOSClient();
+        //生成临时签名URL
+        GeneratePresignedUrlRequest request =
+                new GeneratePresignedUrlRequest(tencentCloudProperties.getBucketPrivate(), path, HttpMethodName.GET);
+        // 设置签名过期时间(可选), 若未进行设置则默认使用ClientConfig中的签名过期时间(5分钟)
+        Date date = new DateTime().plusMinutes(15).toDate();
+        request.setExpiration(date);
+        URL url = cosClient.generatePresignedUrl(request);
+        cosClient.shutdown();//关闭客户端
+        return url.toString();
     }
 }
