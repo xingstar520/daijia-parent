@@ -3,6 +3,7 @@ package com.nianxi.daijia.driver.controller;
 import com.nianxi.daijia.common.login.NianxiLogin;
 import com.nianxi.daijia.common.result.Result;
 import com.nianxi.daijia.driver.service.OcrService;
+import com.nianxi.daijia.model.vo.driver.DriverLicenseOcrVo;
 import com.nianxi.daijia.model.vo.driver.IdCardOcrVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,9 +28,17 @@ public class OcrController {
     //身份证识别
     @Operation(summary = "身份证识别")
     @NianxiLogin
-    @PostMapping("/idCardOrc")
+    @PostMapping("/idCardOcr")
     public Result<IdCardOcrVo> uploadDriverLicenseOcr(@RequestPart("file")MultipartFile file) {
         return Result.ok(ocrService.idCardOcr(file));
+    }
+
+    //驾驶证识别
+    @Operation(summary = "驾驶证识别")
+    @NianxiLogin
+    @PostMapping("/driverLicenseOcr")
+    public Result<DriverLicenseOcrVo> driverLicenseOcr(@RequestPart("file") MultipartFile file) {
+        return Result.ok(ocrService.driverLicenseOcr(file));
     }
 }
 
