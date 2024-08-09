@@ -21,7 +21,7 @@ public class FileController {
 
     //文件上传接口
     @Operation(summary = "上传文件")
-//    @NianxiLogin
+    @NianxiLogin
     @PostMapping("/upload")
     public Result<CosUploadVo> uplode(@RequestPart("file") MultipartFile file,
                     @RequestParam(name = "path", defaultValue = "auth") String path) {

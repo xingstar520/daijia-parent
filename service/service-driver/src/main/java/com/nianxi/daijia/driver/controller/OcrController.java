@@ -21,6 +21,16 @@ import org.springframework.web.multipart.MultipartFile;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class OcrController {
 	
+    @Autowired
+    private OcrService ocrService;
+
+    //身份证识别
+    @Operation(summary = "身份证识别")
+    @PostMapping("/idCardOrc")
+    public Result<IdCardOcrVo> idCardOcr(@RequestPart("file") MultipartFile file) {
+        IdCardOcrVo idCardOcrVo = ocrService.idCardOcr(file);
+        return Result.ok(idCardOcrVo);
+    }
 
 }
 
