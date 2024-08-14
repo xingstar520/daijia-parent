@@ -25,7 +25,7 @@ public class MapServiceImpl implements MapService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("DWGBZ-NRYCQ-WPW56-4CCZE-UMDQ6-HYBNY")
+    @Value("${tencent.map.key}")
     private String key;
 
     //计算驾驶路线
