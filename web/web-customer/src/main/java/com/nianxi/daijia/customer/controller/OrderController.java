@@ -2,8 +2,10 @@ package com.nianxi.daijia.customer.controller;
 
 import com.nianxi.daijia.common.login.NianxiLogin;
 import com.nianxi.daijia.common.result.Result;
+import com.nianxi.daijia.common.util.AuthContextHolder;
 import com.nianxi.daijia.customer.service.OrderService;
 import com.nianxi.daijia.model.form.customer.ExpectOrderForm;
+import com.nianxi.daijia.model.form.customer.SubmitOrderForm;
 import com.nianxi.daijia.model.vo.customer.ExpectOrderVo;
 import com.nianxi.daijia.model.vo.order.CurrentOrderInfoVo;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +41,23 @@ public class OrderController {
     @PostMapping("/expectOrder")
     public Result<ExpectOrderVo> expectOrder(@RequestBody ExpectOrderForm expectOrderForm) {
         return Result.ok(orderService.expectOrder(expectOrderForm));
+    }
+
+    //乘客下单
+    @Operation(summary = "乘客下单")
+    @NianxiLogin
+    @PostMapping("/submitOrder")
+    public Result<Long> submitOrder(@RequestBody SubmitOrderForm submitOrderForm) {
+        submitOrderForm.setCustomerId(AuthContextHolder.getUserId());//设置乘客id
+        return Result.ok(orderService.submitOrder(submitOrderForm));
+    }
+
+    //查询订单状态
+    @Operation(summary = "查询订单状态")
+    @NianxiLogin
+    @GetMapping("/getOrderStatus/{orderId}")
+    public Result<Integer> getOrderStatus(@PathVariable Long orderId) {
+        return Result.ok(orderService.getOrderStatus(orderId));
     }
 }
 

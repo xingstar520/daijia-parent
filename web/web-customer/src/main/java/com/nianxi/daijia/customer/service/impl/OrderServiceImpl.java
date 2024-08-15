@@ -4,11 +4,14 @@ import com.nianxi.daijia.common.result.Result;
 import com.nianxi.daijia.customer.service.OrderService;
 import com.nianxi.daijia.map.client.MapFeignClient;
 import com.nianxi.daijia.model.form.customer.ExpectOrderForm;
+import com.nianxi.daijia.model.form.customer.SubmitOrderForm;
 import com.nianxi.daijia.model.form.map.CalculateDrivingLineForm;
+import com.nianxi.daijia.model.form.order.OrderInfoForm;
 import com.nianxi.daijia.model.form.rules.FeeRuleRequestForm;
 import com.nianxi.daijia.model.vo.customer.ExpectOrderVo;
 import com.nianxi.daijia.model.vo.map.DrivingLineVo;
 import com.nianxi.daijia.model.vo.rules.FeeRuleResponseVo;
+import com.nianxi.daijia.order.client.OrderInfoFeignClient;
 import com.nianxi.daijia.rules.client.FeeRuleFeignClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -27,6 +30,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private MapFeignClient mapFeignClient;
+
+    @Autowired
+    private OrderInfoFeignClient orderInfoFeignClient;
 
     //预估订单数据
     @Override
@@ -64,6 +70,41 @@ public class OrderServiceImpl implements OrderService {
         expectOrderVo.setDrivingLineVo(drivingLineVo);
         expectOrderVo.setFeeRuleResponseVo(feeRuleResponseVo);
         return expectOrderVo;
+    }
+
+    //乘客下单
+    @Override
+    public Long submitOrder(SubmitOrderForm submitOrderForm) {
+        //1.重新计算驾驶线路
+        CalculateDrivingLineForm calculateDrivingLineForm = new CalculateDrivingLineForm();
+        BeanUtils.copyProperties(submitOrderForm, calculateDrivingLineForm);
+        Result<DrivingLineVo> drivingLineVoResult = mapFeignClient.calculateDrivingLine(calculateDrivingLineForm);
+        DrivingLineVo drivingLineVo = drivingLineVoResult.getData();
+
+        //2.重新计算订单费用
+        FeeRuleRequestForm feeRuleRequestForm = new FeeRuleRequestForm();
+        feeRuleRequestForm.setDistance(drivingLineVo.getDistance());
+        feeRuleRequestForm.setStartTime(new Date());
+        feeRuleRequestForm.setWaitMinute(0);
+        Result<FeeRuleResponseVo> feeRuleResponseVoResult = feeRuleFeignClient.calculateOrderFee(feeRuleRequestForm);
+        FeeRuleResponseVo feeRuleResponseVo = feeRuleResponseVoResult.getData();
+
+        //3.保存订单信息
+        OrderInfoForm orderInfoForm = new OrderInfoForm();
+        BeanUtils.copyProperties(submitOrderForm, orderInfoForm);
+        orderInfoForm.setExpectDistance(drivingLineVo.getDistance());
+        orderInfoForm.setExpectAmount(feeRuleResponseVo.getTotalAmount());
+        Result<Long> orderInfoResult = orderInfoFeignClient.saveOrderInfo(orderInfoForm);
+        return orderInfoResult.getData();
+
+        //XJJ TODD 2024/8/15:查询附近司机，推送订单
+    }
+
+    //查询订单状态
+    @Override
+    public Integer getOrderStatus(Long orderId) {
+        Result<Integer> orderStatus = orderInfoFeignClient.getOrderStatus(orderId);
+        return orderStatus.getData();
     }
 
 }

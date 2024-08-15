@@ -35,4 +35,8 @@ public interface DriverInfoFeignClient {
     //创建司机人脸模型
     @PostMapping("/driver/info/creatDriverFaceModel")
     Result<Boolean> creatDriverFaceModel(@RequestBody DriverFaceModelForm driverFaceModelForm);
+
+    //根据司机id查询司机个性化设置信息
+    @GetMapping("/driver/info/getDriverSet/{driverId}")
+    Result<DriverSet> getDriverSet(@PathVariable("driverId") Long driverId);
 }

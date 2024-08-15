@@ -23,4 +23,12 @@ import java.util.Date;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class OrderServiceImpl implements OrderService {
 
+    @Autowired
+    private OrderInfoFeignClient orderInfoFeignClient;
+
+    @Override
+    public Integer getOrderStatus(Long orderId) {
+        Result<Integer> orderStatus = orderInfoFeignClient.getOrderStatus(orderId);
+        return orderStatus.getData();
+    }
 }

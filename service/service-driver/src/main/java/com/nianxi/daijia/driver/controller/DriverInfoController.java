@@ -2,6 +2,7 @@ package com.nianxi.daijia.driver.controller;
 
 import com.nianxi.daijia.common.result.Result;
 import com.nianxi.daijia.driver.service.DriverInfoService;
+import com.nianxi.daijia.model.entity.driver.DriverSet;
 import com.nianxi.daijia.model.form.driver.DriverFaceModelForm;
 import com.nianxi.daijia.model.form.driver.UpdateDriverAuthInfoForm;
 import com.nianxi.daijia.model.vo.driver.DriverAuthInfoVo;
@@ -59,6 +60,13 @@ public class DriverInfoController {
     public Result<Boolean> creatDriverFaceModel(@RequestBody DriverFaceModelForm driverFaceModelForm) {
         Boolean isSuccess = driverInfoService.creatDriverFaceModel(driverFaceModelForm);
         return Result.ok(isSuccess);
+    }
+
+    //根据司机id查询司机个性化设置信息
+    @Operation(summary = "获取司机设置信息")
+    @GetMapping("/getDriverSet/{driverId}")
+    public Result<DriverSet> getDriverSet(@PathVariable Long driverId) {
+        return Result.ok(driverInfoService.getDriverSet(driverId));
     }
 }
 
