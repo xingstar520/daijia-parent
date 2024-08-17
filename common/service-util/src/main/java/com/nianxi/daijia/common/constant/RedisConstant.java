@@ -12,10 +12,10 @@ public class RedisConstant {
     public static final String DRIVER_GEO_LOCATION = "driver:geo:location";
     //司机接单临时容器
     public static final String DRIVER_ORDER_TEMP_LIST = "driver:order:temp:list:";
-    public static final long DRIVER_ORDER_TEMP_LIST_EXPIRES_TIME = 1;
+    public static final long DRIVER_ORDER_TEMP_LIST_EXPIRES_TIME = 2;
     //司机订单去重容器
     public static final String DRIVER_ORDER_REPEAT_LIST = "driver:order:repeat:list:";
-    public static final long DRIVER_ORDER_REPEAT_LIST_EXPIRES_TIME = 16;
+    public static final long DRIVER_ORDER_REPEAT_LIST_EXPIRES_TIME = 15;
 
 //    //订单与任务关联
 //    public static final String ORDER_JOB = "order:job:";
