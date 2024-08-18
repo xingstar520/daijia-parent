@@ -4,8 +4,10 @@ import com.nianxi.daijia.common.constant.RedisConstant;
 import com.nianxi.daijia.common.execption.GuiguException;
 import com.nianxi.daijia.common.result.Result;
 import com.nianxi.daijia.common.result.ResultCodeEnum;
+import com.nianxi.daijia.dispatch.client.NewOrderFeignClient;
 import com.nianxi.daijia.driver.client.DriverInfoFeignClient;
 import com.nianxi.daijia.driver.service.DriverService;
+import com.nianxi.daijia.map.client.LocationFeignClient;
 import com.nianxi.daijia.model.form.driver.DriverFaceModelForm;
 import com.nianxi.daijia.model.form.driver.UpdateDriverAuthInfoForm;
 import com.nianxi.daijia.model.vo.driver.DriverAuthInfoVo;
@@ -28,6 +30,12 @@ public class DriverServiceImpl implements DriverService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private LocationFeignClient locationFeignClient;
+
+    @Autowired
+    private NewOrderFeignClient newOrderFeignClient;
 
     @Override
     public String login(String code) {
@@ -113,5 +121,45 @@ public class DriverServiceImpl implements DriverService {
             throw new GuiguException(ResultCodeEnum.DATA_ERROR);
         }
         return booleanResult.getData();
+    }
+
+    //判断司机当日是否进行过人脸识别
+    @Override
+    public Boolean isFaceRecognition(Long driverId) {
+        return client.isFaceRecognition(driverId).getData();
+    }
+
+    //验证司机人脸
+    @Override
+    public Boolean verifyDriverFace(DriverFaceModelForm driverFaceModelForm) {
+        return client.verifyDriverFace(driverFaceModelForm).getData();
+    }
+
+    //司机开始服务
+    @Override
+    public Boolean startService(Long driverId) {
+        //更新司机的状态
+        client.updateServiceStatus(driverId, 1);
+
+        //删除司机位置信息
+        locationFeignClient.removeDriverLocation(driverId);
+
+        //清空司机订单临时队列
+        newOrderFeignClient.clearNewOrderQueueData(driverId);
+        return true;
+    }
+
+    //司机结束服务
+    @Override
+    public Boolean stopService(Long driverId) {
+        //更新司机的状态
+        client.updateServiceStatus(driverId, 0);
+
+        //删除司机位置信息
+        locationFeignClient.removeDriverLocation(driverId);
+
+        //清空司机订单临时队列
+        newOrderFeignClient.clearNewOrderQueueData(driverId);
+        return true;
     }
 }

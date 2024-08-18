@@ -104,6 +104,7 @@ public class LocationServiceImpl implements LocationService {
                 //当前接单距离
                 BigDecimal currentDistance = BigDecimal.valueOf(item.getDistance().getValue()).setScale(2, RoundingMode.HALF_UP);
                 BigDecimal acceptDistance = driverSet.getAcceptDistance();
+                //如果接单距离不为0，且当前距离小于接单距离，不满足条件
                 if (acceptDistance.doubleValue() != 0 && acceptDistance.subtract(currentDistance).doubleValue() < 0) {
                     continue;
                 }

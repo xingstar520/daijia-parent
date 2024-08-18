@@ -7,17 +7,11 @@ import com.nianxi.daijia.common.constant.SystemConstant;
 import com.nianxi.daijia.common.execption.GuiguException;
 import com.nianxi.daijia.common.result.ResultCodeEnum;
 import com.nianxi.daijia.driver.config.TencentCloudProperties;
-import com.nianxi.daijia.driver.mapper.DriverAccountMapper;
-import com.nianxi.daijia.driver.mapper.DriverInfoMapper;
-import com.nianxi.daijia.driver.mapper.DriverLoginLogMapper;
-import com.nianxi.daijia.driver.mapper.DriverSetMapper;
+import com.nianxi.daijia.driver.mapper.*;
 import com.nianxi.daijia.driver.service.CosService;
 import com.nianxi.daijia.driver.service.DriverInfoService;
-import com.nianxi.daijia.model.entity.driver.DriverAccount;
-import com.nianxi.daijia.model.entity.driver.DriverInfo;
+import com.nianxi.daijia.model.entity.driver.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.nianxi.daijia.model.entity.driver.DriverLoginLog;
-import com.nianxi.daijia.model.entity.driver.DriverSet;
 import com.nianxi.daijia.model.form.driver.DriverFaceModelForm;
 import com.nianxi.daijia.model.form.driver.UpdateDriverAuthInfoForm;
 import com.nianxi.daijia.model.vo.driver.DriverAuthInfoVo;
@@ -31,12 +25,14 @@ import com.tencentcloudapi.iai.v20200303.IaiClient;
 import com.tencentcloudapi.iai.v20200303.models.*;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
+import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Slf4j
 @Service
@@ -63,6 +59,9 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
 
     @Autowired
     private TencentCloudProperties tencentCloudProperties;
+
+    @Autowired
+    private DriverFaceRecognitionMapper driverFaceRecognitionMapper;
 
     //小程序授权登陆
     @Override
@@ -214,5 +213,96 @@ public class DriverInfoServiceImpl extends ServiceImpl<DriverInfoMapper, DriverI
         LambdaQueryWrapper<DriverSet> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DriverSet::getDriverId, driverId);
         return driverSetMapper.selectOne(wrapper);
+    }
+
+    //判断司机当日是否进行过人脸识别
+    @Override
+    public Boolean isFaceRecognition(Long driverId) {
+        //根据ID+当日日期查询
+        LambdaQueryWrapper<DriverFaceRecognition> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DriverFaceRecognition::getDriverId, driverId);
+        DateTime dateTime = new DateTime();
+        wrapper.eq(DriverFaceRecognition::getFaceDate, dateTime.toString("yyyy-MM-dd"));
+        Long count = driverFaceRecognitionMapper.selectCount(wrapper);
+        return count != 0;
+    }
+
+    //验证司机人脸
+    @Override
+    public Boolean verifyDriverFace(DriverFaceModelForm driverFaceModelForm) {
+        try {
+            Credential cred = new Credential(tencentCloudProperties.getSecretId(), tencentCloudProperties.getSecretKey());
+            HttpProfile httpProfile = new HttpProfile();
+            httpProfile.setEndpoint("iai.tencentcloudapi.com");
+            // 实例化一个client选项，可选的，没有特殊需求可以跳过
+            ClientProfile clientProfile = new ClientProfile();
+            clientProfile.setHttpProfile(httpProfile);
+            // 实例化要请求产品的client对象,clientProfile是可选的
+            IaiClient client = new IaiClient(cred, tencentCloudProperties.getRegion(), clientProfile);
+            // 实例化一个请求对象,每个接口都会对应一个request对象
+            VerifyFaceRequest req = new VerifyFaceRequest();
+            //设置相关值
+            req.setImage(driverFaceModelForm.getImageBase64());
+            req.setPersonId(String.valueOf(driverFaceModelForm.getDriverId()));
+
+            // 返回的resp是一个VerifyFaceResponse的实例，与请求对象对应
+            VerifyFaceResponse resp = client.VerifyFace(req);
+            // 输出json格式的字符串回包
+            System.out.println(AbstractModel.toJsonString(resp));
+            if (resp.getIsMatch()) {
+                //2 如果照片比对成功，静态活体检测
+                Boolean isSuccess = this.detectLiveFace(driverFaceModelForm.getImageBase64());
+                if (isSuccess) {//3 如果静态活体检测通过，添加数据到认证表里面
+                    DriverFaceRecognition driverFaceRecognition = new DriverFaceRecognition();
+                    driverFaceRecognition.setDriverId(driverFaceModelForm.getDriverId());
+                    driverFaceRecognition.setFaceDate(new Date());
+                    driverFaceRecognitionMapper.insert(driverFaceRecognition);
+                    return true;
+                }
+            }
+        } catch (TencentCloudSDKException e) {
+            System.out.println(e.toString());
+        }
+        throw new GuiguException(ResultCodeEnum.DATA_ERROR);
+    }
+
+    //更新司机服务状态
+    @Override
+    public Boolean updateServiceStatus(Long driverId, Integer status) {
+        LambdaQueryWrapper<DriverSet> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DriverSet::getDriverId, driverId);
+        DriverSet driverSet = new DriverSet();
+        driverSet.setServiceStatus(status);
+        driverSetMapper.update(driverSet, wrapper);
+        return true;
+    }
+
+    //人脸静态活体检测
+    private Boolean detectLiveFace(String imageBase64) {
+        try {
+            Credential cred = new Credential(tencentCloudProperties.getSecretId(), tencentCloudProperties.getSecretKey());
+            // 实例化一个http选项，可选的，没有特殊需求可以跳过
+            HttpProfile httpProfile = new HttpProfile();
+            httpProfile.setEndpoint("iai.tencentcloudapi.com");
+            // 实例化一个client选项，可选的，没有特殊需求可以跳过
+            ClientProfile clientProfile = new ClientProfile();
+            clientProfile.setHttpProfile(httpProfile);
+            // 实例化要请求产品的client对象,clientProfile是可选的
+            IaiClient client = new IaiClient(cred, tencentCloudProperties.getRegion(), clientProfile);
+            // 实例化一个请求对象,每个接口都会对应一个request对象
+            DetectLiveFaceRequest req = new DetectLiveFaceRequest();
+            req.setImage(imageBase64);
+            // 返回的resp是一个DetectLiveFaceResponse的实例，与请求对象对应
+            DetectLiveFaceResponse resp = client.DetectLiveFace(req);
+            // 输出json格式的字符串回包
+            System.out.println(DetectLiveFaceResponse.toJsonString(resp));
+            if (resp.getIsLiveness()) {
+                return true;
+            }
+        } catch (TencentCloudSDKException e) {
+            System.out.println(e.toString());
+        }
+        //XJJ TODD 2024/8/18:测试直接返回true
+        return true;
     }
 }

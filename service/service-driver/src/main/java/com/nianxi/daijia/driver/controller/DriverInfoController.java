@@ -68,5 +68,26 @@ public class DriverInfoController {
     public Result<DriverSet> getDriverSet(@PathVariable Long driverId) {
         return Result.ok(driverInfoService.getDriverSet(driverId));
     }
+
+    //判断司机当日是否进行过人脸识别
+    @Operation(summary = "判断司机当日是否进行过人脸识别")
+    @GetMapping("/isFaceRecognition/{driverId}")
+    public Result<Boolean> isFaceRecognition(@PathVariable("driverId") Long driverId) {
+        return Result.ok(driverInfoService.isFaceRecognition(driverId));
+    }
+
+    //验证司机人脸
+    @Operation(summary = "验证司机人脸")
+    @PostMapping("/verifyDriverFace")
+    public Result<Boolean> verifyDriverFace(@RequestBody DriverFaceModelForm driverFaceModelForm) {
+        return Result.ok(driverInfoService.verifyDriverFace(driverFaceModelForm));
+    }
+
+    //更新接单状态
+    @Operation(summary = "更新接单状态")
+    @GetMapping("/updateServiceStatus/{driverId}/{status}")
+    public Result<Boolean> updateServiceStatus(@PathVariable Long driverId, @PathVariable Integer status) {
+        return Result.ok(driverInfoService.updateServiceStatus(driverId, status));
+    }
 }
 
