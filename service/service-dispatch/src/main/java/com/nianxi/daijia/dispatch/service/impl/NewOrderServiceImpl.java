@@ -138,7 +138,7 @@ public class NewOrderServiceImpl implements NewOrderService {
         Long size = redisTemplate.opsForList().size(key);
         if (size > 0){
             for (int i = 0; i< size; i++){
-                String content = (String) redisTemplate.opsForList().rightPop(key);
+                String content = (String) redisTemplate.opsForList().leftPop(key);
                 NewOrderDataVo newOrderDataVo = JSONObject.parseObject(content, NewOrderDataVo.class);
                 list.add(newOrderDataVo);
             }
